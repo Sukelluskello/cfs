@@ -1,0 +1,746 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "QS(0022) Redhat Ansible Tower, License: Apache 2.0 (Please do not remove) June,2,2017",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {
+                        "default": "Network Configuration"
+                    },
+                    "Parameters": [
+                        "VPCCIDR",
+                        "AccessCIDR",
+                        "SubnetCIDR",
+                        "SubnetId",
+                        "VPCID"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Ansible Configuration"
+                    },
+                    "Parameters": [
+                        "KeyPairName",
+                        "AnsibleTowerIP",
+                        "AnsibleClientLinuxIP",
+                        "AnsibleAdminPassword",
+                        "DatabaseAdminPassword",
+                        "AnsibleTowerInstanceType",
+                        "AnsibleClientInstanceType",
+                        "OSType"
+                    ]
+                }, {
+                    "Label": {
+
+                    },
+                    "Parameters": [
+                        "QSS3BucketName",
+                        "QSS3KeyPrefix"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "KeyPairName": {
+                    "default": "Key Pair Name"
+                },
+                "AnsibleTowerInstanceType": {
+                    "default": "Tower Instance Type"
+                },
+                "AnsibleClientInstanceType": {
+                    "default": "Client Instance Type"
+                },
+                "DatabaseAdminPassword": {
+                    "default": "Database Admin Password"
+                },
+                "AnsibleAdminPassword": {
+                    "default": "Ansible Tower Admin Password"
+                },
+                "OSType": {
+                    "default": "Operating System"
+                },
+                "AnsibleTowerIP": {
+                    "default": "Ansible Tower IP Address"
+                },
+                "AnsibleClientLinuxIP": {
+                    "default": "Linux Client IP address"
+                },
+                "AccessCIDR": {
+                    "default": "Permitted IP range"
+                },
+                "SubnetCIDR": {
+                    "default": "Subnet CIDR"
+                },
+                "VPCCIDR": {
+                    "default": "VPC CIDR"
+                },
+                "VPCID": {
+                    "default": "VPC ID"
+                },
+                "SubnetId": {
+                    "default": "Subnet ID"
+                },
+                "QSS3BucketName": {
+                    "default": "Quick Start bucket name"
+                },
+                "QSS3KeyPrefix": {
+                    "default": "Quick Start S3 Prefix"
+
+                }
+            }
+        }
+    },
+    "Parameters": {
+        "KeyPairName": {
+            "Description": "Public/private key pair",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "SubnetId": {
+            "Description": "VPC Subnet ID for EC2 Instances",
+            "Type": "AWS::EC2::Subnet::Id"
+        },
+        "VPCID": {
+            "Description": "VPC ID",
+            "Type": "AWS::EC2::VPC::Id"
+        },
+        "AccessCIDR": {
+            "Description": "CIDR Block or IP for SSH and RDP access",
+            "Type": "String",
+            "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+        },
+        "AnsibleTowerIP": {
+            "Description": "IP for the Ansible master",
+            "Type": "String",
+            "Default": "172.31.0.10"
+        },
+        "AnsibleClientLinuxIP": {
+            "Description": "IP for the Ansible client",
+            "Type": "String",
+            "Default": "172.31.0.11"
+        },
+        "AnsibleAdminPassword": {
+            "Description": "Password for Ansible Admin Must be at least 8 characters containing letters and (minimum 1 capital letter), numbers and symbols",
+            "Type": "String",
+            "MinLength": "8",
+            "MaxLength": "32",
+            "AllowedPattern": "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
+            "NoEcho": "true"
+        },
+        "DatabaseAdminPassword": {
+            "Description": "Password for Ansible Admin Must be at least 8 characters containing letters and (minimum 1 capital letter), numbers and symbols",
+            "Type": "String",
+            "MinLength": "8",
+            "MaxLength": "32",
+            "AllowedPattern": "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
+            "NoEcho": "true"
+        },
+        "AnsibleTowerInstanceType": {
+            "Description": "Amazon EC2 instance type for the Config Server",
+            "Type": "String",
+            "Default": "m4.large",
+            "AllowedValues": [
+                "t2.large",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m4.4xlarge",
+                "m4.10xlarge",
+                "c4.large",
+                "c4.xlarge",
+                "c4.2xlarge",
+                "c4.4xlarge",
+                "c4.8xlarge",
+                "c3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge",
+                "c3.8xlarge",
+                "r3.large",
+                "r3.xlarge",
+                "r3.2xlarge",
+                "r3.4xlarge",
+                "r3.8xlarge",
+                "i2.xlarge",
+                "i2.2xlarge",
+                "i2.4xlarge",
+                "i2.8xlarge"
+            ]
+        },
+        "AnsibleClientInstanceType": {
+            "Description": "Amazon EC2 instance type for the Linux nodes.",
+            "Type": "String",
+            "Default": "t2.medium",
+            "AllowedValues": [
+                "t2.medium",
+                "t2.large",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m4.4xlarge",
+                "m4.10xlarge",
+                "c4.large",
+                "c4.xlarge",
+                "c4.2xlarge",
+                "c4.4xlarge",
+                "c4.8xlarge",
+                "c3.large",
+                "c3.xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge",
+                "c3.8xlarge",
+                "r3.large",
+                "r3.xlarge",
+                "r3.2xlarge",
+                "r3.4xlarge",
+                "r3.8xlarge",
+                "i2.xlarge",
+                "i2.2xlarge",
+                "i2.4xlarge",
+                "i2.8xlarge"
+            ]
+        },
+        "VPCCIDR": {
+            "Description": "CIDR Block for the VPC",
+            "Type": "String",
+            "Default": "172.31.0.0/16",
+            "AllowedPattern": "[a-zA-Z0-9]+\\..+"
+        },
+        "OSType": {
+            "AllowedValues": [
+                "CentOS-7",
+                "Redhat-Enterprise-Linux-7"
+            ],
+            "Default": "Redhat-Enterprise-Linux-7",
+            "Description": "The Linux distribution for Ansible Tower",
+            "Type": "String"
+        },
+        "QSS3BucketName": {
+            "Type": "String",
+            "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
+            "ConstraintDescription": "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Default": "quickstart-reference",
+            "Description": "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
+        },
+        "QSS3KeyPrefix": {
+            "Type": "String",
+            "AllowedPattern": "^[0-9a-zA-Z-/]*$",
+            "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Default": "redhat/ansible/latest/",
+            "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
+        }
+    },
+    "Mappings": {
+        "AWSAMIRegionMap": {
+            "AMI": {
+                "CENTOS7HVM": "CentOS Linux 7 x86_64 HVM EBS 1704_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d52f5bc3.4",
+                "RHEL72HVM": "RHEL-7.2_HVM-20161025-x86_64-1-Hourly2-GP2"
+            },
+            "ap-northeast-1": {
+                "CENTOS7HVM": "ami-29d1e34e",
+                "RHEL72HVM": "ami-2265c543"
+            },
+            "ap-northeast-2": {
+                "CENTOS7HVM": "ami-08e93466",
+                "RHEL72HVM": "ami-a9e532c7"
+            },
+            "ap-south-1": {
+                "CENTOS7HVM": "ami-3c0e7353",
+                "RHEL72HVM": "ami-917205fe"
+            },
+            "ap-southeast-1": {
+                "CENTOS7HVM": "ami-7d2eab1e",
+                "RHEL72HVM": "ami-22953841"
+            },
+            "ap-southeast-2": {
+                "CENTOS7HVM": "ami-34171d57",
+                "RHEL72HVM": "ami-91cdf0f2"
+            },
+            "ca-central-1": {
+                "CENTOS7HVM": "ami-28823e4c",
+                "RHEL72HVM": "ami-b764d6d3"
+            },
+            "eu-central-1": {
+                "CENTOS7HVM": "ami-fa2df395",
+                "RHEL72HVM": "ami-7def1712"
+            },
+            "eu-west-1": {
+                "CENTOS7HVM": "ami-061b1560",
+                "RHEL72HVM": "ami-b22961c1"
+            },
+            "eu-west-2": {
+                "CENTOS7HVM": "ami-e05a4d84",
+                "RHEL72HVM": "ami-b9353fdd"
+            },
+            "sa-east-1": {
+                "CENTOS7HVM": "ami-b31a75df",
+                "RHEL72HVM": "ami-28f66a44"
+            },
+            "us-east-1": {
+                "CENTOS7HVM": "ami-46c1b650",
+                "RHEL72HVM": "ami-873e6190"
+            },
+            "us-east-2": {
+                "CENTOS7HVM": "ami-18f8df7d",
+                "RHEL72HVM": "ami-0a33696f"
+            },
+            "us-west-1": {
+                "CENTOS7HVM": "ami-f5d7f195",
+                "RHEL72HVM": "ami-f88fc498"
+            },
+            "us-west-2": {
+                "CENTOS7HVM": "ami-f4533694",
+                "RHEL72HVM": "ami-5dd3743d"
+            }
+        },
+        "LinuxAMINameMap": {
+            "Redhat-Enterprise-Linux-7": {
+                "Code": "RHEL72HVM"
+            },
+            "CentOS-7": {
+                "Code": "CENTOS7HVM"
+            }
+        }
+    },
+    "Conditions": {
+        "GovCloudCondition": {
+            "Fn::Equals": [{
+                    "Ref": "AWS::Region"
+                },
+                "us-gov-west-1"
+            ]
+        }
+    },
+    "Resources": {
+        "AnsibleHostRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:GetObject",
+                                        "s3:ListObject"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Sub": [
+                                            "arn:${Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*",
+                                            {
+                                                "Partition": {
+                                                    "Fn::If": [
+                                                        "GovCloudCondition",
+                                                        "aws-us-gov",
+                                                        "aws"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        },
+                        "PolicyName": "aws-quick-start-s3-policy"
+                }],
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Effect": "Allow"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                }
+            }
+        },
+        "AnsibleHostProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Roles": [
+                    {
+                        "Ref": "AnsibleHostRole"
+                    }
+                ],
+                "Path": "/"
+              }
+        },
+        "AnsibleTower": {
+            "Type": "AWS::EC2::Instance",
+            "Metadata": {
+                "AWS::CloudFormation::Authentication": {
+                    "S3AccessCreds": {
+                        "type": "S3",
+                        "roleName": {
+                            "Ref": "AnsibleHostRole"
+                        },
+                        "buckets": [
+                            {
+                                "Ref": "QSS3BucketName"
+                            }
+                        ]
+                    }
+                },
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "packages": {
+                            "yum": {
+                                "curl": [],
+                                "wget": []
+                            }
+                        },
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackId"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n"
+]
+                                    ]
+                                },
+                                "mode": "000400",
+                                "user": "root",
+                                "group": "root"
+                            },
+                            "/etc/qsadmin.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "ansible_admin_password|",
+                                            {
+                                                "Ref": "AnsibleAdminPassword"
+                                            },
+                                            "\n",
+                                            "ansible_dbadmin_password|",
+                                            {
+                                                "Ref": "DatabaseAdminPassword"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "mode": "000400",
+                                "user": "root",
+                                "group": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "IamInstanceProfile": { "Ref": "AnsibleHostProfile" },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSAMIRegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "LinuxAMINameMap",
+                                {
+                                    "Ref": "OSType"
+                                },
+                                "Code"
+                            ]
+                        }
+                    ]
+                },
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "VolumeSize": "50"
+                        }
+                    }
+                ],
+                "InstanceType": {
+                    "Ref": "AnsibleTowerInstanceType"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeleteOnTermination": "true",
+                        "DeviceIndex": 0,
+                        "SubnetId": {
+                            "Ref": "SubnetId"
+                        },
+                        "PrivateIpAddresses": [
+                            {
+                                "Primary": "true",
+                                "PrivateIpAddress": {
+                                    "Ref": "AnsibleTowerIP"
+                                }
+                            }
+                        ],
+                        "GroupSet": [
+                            {
+                                "Ref": "AnsibleTowerSecurityGroup"
+                            }
+                        ]
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "AnsibleTower"
+                    },
+                    {
+                        "Key": "Tower",
+                        "Value": "Managed"
+                    }
+                ],
+                "KeyName": {
+                    "Ref": "KeyPairName"
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash -e \n",
+                                "yum install -y gcc libffi-devel python-devel openssl-devel\n",
+                                "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n",
+                                "yum install -y python-setuptools\n",
+                                "yum install -y python-daemon\n",
+                                "yum install -y pystache\n",
+                                "yum install -y python-ecdsa\n",
+                                "yum install -y python-paramiko\n",
+                                "yum install -y python-keyczar\n",
+                                "yum install -y python-crypto\n",
+                                "yum install -y python-pip\n",
+                                "pip install --upgrade pip\n",
+                                "pip install httplib2\n",
+                                "pip install awscli\n",
+                                "pip install pyopenssl ndg-httpsclient pyasn1\n",
+                                "easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+                                {"Fn::Sub": "/usr/bin/cfn-init -v --stack ${AWS::StackName} --resource AnsibleTower --region ${AWS::Region}\n"},
+                                {"Fn::Sub": "/usr/bin/cfn-signal -e $? '${WaitforCfnTools}'\n"},
+                                {"Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/ansible-tower.sh ansible-tower.sh; \n"},
+                                "chmod 755 ansible-tower.sh; \n",
+                                "./ansible-tower.sh;\n",
+                                {"Fn::Sub": "/usr/bin/cfn-signal -e $? '${WaitforAnsibleTowerInstall}'\n"}
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "WaitforCfnTools": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "CfnWaitCondition": {
+            "Type": "AWS::CloudFormation::WaitCondition",
+            "DependsOn": "AnsibleTower",
+            "Properties": {
+                "Handle": {
+                    "Ref": "WaitforCfnTools"
+                },
+                "Timeout": "3000"
+            }
+        },
+        "WaitforAnsibleTowerInstall": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "AnsibleTowerWaitCondition": {
+            "Type": "AWS::CloudFormation::WaitCondition",
+            "DependsOn": "AnsibleTower",
+            "Properties": {
+                "Handle": {
+                    "Ref": "WaitforAnsibleTowerInstall"
+                },
+                "Timeout": "3000"
+            }
+        },
+        "LinuxClient": {
+            "Type": "AWS::EC2::Instance",
+            "DependsOn": "AnsibleTowerWaitCondition",
+            "Properties": {
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSAMIRegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "RHEL72HVM"
+                    ]
+                },
+                "InstanceType": {
+                    "Ref": "AnsibleClientInstanceType"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeleteOnTermination": "true",
+                        "DeviceIndex": 0,
+                        "SubnetId": {
+                            "Ref": "SubnetId"
+                        },
+                        "PrivateIpAddresses": [
+                            {
+                                "Primary": "true",
+                                "PrivateIpAddress": {
+                                    "Ref": "AnsibleClientLinuxIP"
+                                }
+                            }
+                        ],
+                        "GroupSet": [
+                            {
+                                "Ref": "AnsibleClientLinuxSecurityGroup"
+                            }
+                        ]
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "AnsibleClient"
+                    },
+                    {
+                        "Key": "Tower",
+                        "Value": "Managed"
+                    }
+                ],
+                "KeyName": {
+                    "Ref": "KeyPairName"
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "date >/root/born_date",
+                                "\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "AnsibleTowerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enables access to the Ansible tower",
+                "VpcId": {
+                    "Ref": "VPCID"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {
+                            "Ref": "AccessCIDR"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {
+                            "Ref": "VPCCIDR"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "443",
+                        "ToPort": "443",
+                        "CidrIp": {
+                            "Ref": "AccessCIDR"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8080",
+                        "ToPort": "8080",
+                        "CidrIp": {
+                            "Ref": "AccessCIDR"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": {
+                            "Ref": "AccessCIDR"
+                        }
+                    }
+                ]
+            }
+        },
+        "AnsibleClientLinuxSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enables access to the ansible communication",
+                "VpcId": {
+                    "Ref": "VPCID"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {
+                            "Ref": "AccessCIDR"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {
+                            "Ref": "VPCCIDR"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "AnsibleTowerURL": {
+            "Value": {
+                "Fn::Join": [
+                    "/",
+                    [
+                        "https:/",
+                        {
+                            "Fn::GetAtt": [
+                                "AnsibleTower",
+                                "PublicDnsName"
+                            ]
+                        }
+                    ]
+                ]
+            },
+            "Description": "Public DNS Name for the Ansible Server"
+        },
+        "AnsibleClientLinuxDnsName": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "LinuxClient",
+                    "PublicDnsName"
+                ]
+            },
+            "Description": "Public DNS Name for the Ansible Linux"
+        }
+    }
+}
